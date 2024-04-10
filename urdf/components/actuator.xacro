@@ -1,8 +1,16 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"
+       xmlns:nw="urn:network"
+       xmlns:nt="urn:network-topology"
+       xmlns:l1t="urn:layer1"
+       xmlns:l2t="urn:layer2"
+       name="hebi_robot">
+
+    <xacro:include filename="$(find hebi_description)/interface-description/urdf/cat6.urdf.xacro"/>
+
   <!-- NOTE: joint must match the name of the module -->
-  <xacro:macro name="actuator" params="name child:='' type limits:=${[]}">
-   
+   <xacro:macro name="actuator" params="name child:='' type limits:=${[]}">
+
     <xacro:property name="model_name" value="${type}"/>
 
     <!-- Continuous joints (no position limits) -->
@@ -153,6 +161,56 @@
       
       <dynamics damping="${damping}" friction="${friction}"/>
     </joint>
+    <!-- This joint and link is for the first ethernet interface.-->
+    <joint name="${name}_ethernet_joint_1" type="fixed">
+            <origin xyz="-1 1 0" rpy="0 0 0"/>
+            <parent link="${name}/INPUT_INTERFACE"/>
+            <child link="${name}_ethernet_link_1" />
+    </joint>
+
+    <link name="${name}_ethernet_link_1">
+          <visual>
+              <origin rpy="0 0 0" xyz="0 0 0"/>
+              <geometry>
+              <mesh filename="package://hebi_description/interface-description/meshes/rj45-female.stl" scale="0.001 0.001 0.001"/>
+              </geometry>
+              <material name="LightGrey">
+              <color rgba="0.7 0.7 0.7 1.0"/>
+              </material>
+          </visual>
+
+          <collision>
+              <origin xyz="0 0 0" rpy="0 0 0"/>
+              <geometry>
+              <mesh filename="package://hebi_description/interface-description/meshes/rj45-female.stl" scale="0.001 0.001 0.001"/>
+              </geometry>
+          </collision>
+    </link>      
+     <!-- This joint and link is for the second ethernet interface.-->
+    <joint name="${name}_ethernet_joint_2" type="fixed">
+            <origin xyz="1 1 0" rpy="0 0 0"/>
+            <parent link="${name}/INPUT_INTERFACE"/>
+            <child link="${name}_ethernet_link_2" />
+    </joint>
+
+    <link name="${name}_ethernet_link_2">
+          <visual>
+              <origin rpy="0 0 0" xyz="0 0 0"/>
+              <geometry>
+              <mesh filename="package://hebi_description/interface-description/meshes/rj45-female.stl" scale="0.001 0.001 0.001"/>
+              </geometry>
+              <material name="LightGrey">
+              <color rgba="0.7 0.7 0.7 1.0"/>
+              </material>
+          </visual>
+
+          <collision>
+              <origin xyz="0 0 0" rpy="0 0 0"/>
+              <geometry>
+              <mesh filename="package://hebi_description/interface-description/meshes/rj45-female.stl" scale="0.001 0.001 0.001"/>
+              </geometry>
+          </collision>
+    </link>      
   </xacro:macro>
 
   <!-- This macro is used when an actuator is "flipped" so parent feeds into input-->
@@ -320,7 +378,99 @@
       <xacro:if value="${model_name.startswith('R8')}">
         <origin xyz="0 0 0" rpy="0 0 0"/>
       </xacro:if>
-    </joint>
-  </xacro:macro>
-</robot>
+      </joint>
 
+        <!-- This joint and link is for the first ethernet interface.-->
+            <joint name="${name}_ethernet_joint_1" type="fixed">
+            <origin xyz="-1 1 0" rpy="0 0 0"/>
+            <parent link="${name}/INPUT_INTERFACE"/>
+            <child link="${name}_ethernet_link_1" />
+            </joint>
+
+            <link name="${name}_ethernet_link_1">
+            <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+            <mesh filename="package://hebi_description/interface-description/meshes/rj45-female.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="LightGrey">
+            <color rgba="0.7 0.7 0.7 1.0"/>
+            </material>
+            </visual>
+
+            <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+            <mesh filename="package://hebi_description/interface-description/meshes/rj45-female.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            </collision>
+            </link> 
+
+             <!-- This joint and link is for the second ethernet interface.-->
+            <joint name="${name}_ethernet_joint_2" type="fixed">
+            <origin xyz="1 1 0" rpy="0 0 0"/>
+            <parent link="${name}/INPUT_INTERFACE"/>
+            <child link="${name}_ethernet_link_2" />
+            </joint>
+
+            <link name="${name}_ethernet_link_2">
+            <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+            <mesh filename="package://hebi_description/interface-description/meshes/rj45-female.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="LightGrey">
+            <color rgba="0.7 0.7 0.7 1.0"/>
+            </material>
+            </visual>
+
+            <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+            <mesh filename="package://hebi_description/interface-description/meshes/rj45-female.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            </collision>
+            </link>      
+  </xacro:macro>
+
+     <xacro:macro name="actuator_ethernet" params="parent L2_network_id:=Data_Link L1_network_id:=Physical L2_id:=ACTUATOR_L2 L1_id:=ACTUATOR_L1"> 
+        
+        <yang>
+            <!-- NUC L2 network topology -->
+            <nw:network>
+                <nw:network-id>${L2_network_id}</nw:network-id>
+                <nw:network-types>
+                    <l2t:l2-topology/>
+                </nw:network-types>
+                <nw:supporting-network>
+                    <nw:network-ref>${L1_network_id}</nw:network-ref>
+                </nw:supporting-network>
+                <nw:node>
+                    <nw:node-id>${L2_id}</nw:node-id>
+                    <nw:supporting-node>
+                        <nw:network-ref>${L2_id}</nw:network-ref>
+                        <nw:node-ref>${L1_id}</nw:node-ref>
+                    </nw:supporting-node>
+                    <xacro:cat6_L2 id="eth_1" supporting_network="${L1_network_id}" supporting_node="${L1_id}" supporting_tp="eth_1"/>
+                    <xacro:cat6_L2 id="eth_2" supporting_network="${L1_network_id}" supporting_node="${L1_id}" supporting_tp="eth_2"/>
+                </nw:node>
+            </nw:network>
+
+            <!-- NUC L1 network topology -->
+            <nw:network>
+                <nw:network-id>${L1_network_id}</nw:network-id>
+                <nw:network-types>
+                    <l1t:l1-topology/>
+                </nw:network-types>
+                <nw:node>
+                    <nw:node-id>${L1_id}</nw:node-id>
+                    <l1t:l1-node-attributes>
+                        <l1t:device-type>actuator</l1t:device-type>
+                    </l1t:l1-node-attributes>
+                    <xacro:cat6_L1 id="eth_1"/>
+                    <xacro:cat6_L1 id="eth_2"/>
+                </nw:node>
+            </nw:network>
+        </yang> 
+    </xacro:macro> 
+</robot>
