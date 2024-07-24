@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<robot name="Hebi-Car" xmlns:xacro="http://ros.org/wiki/xacro">
+
+ <xacro:include filename="$(find hebi_description)/urdf/components/hebi.xacro"/>
+ <!--<xacro:include filename="$(find hebi_description)/urdf/components/actuator.xacro"/> -->
+
+
+ <!-- Define robot constants (in cm) [currently added in cm] -->
+  <xacro:property name="base_length" value="40.5"/>
+  <xacro:property name="base_width" value="18.5"/>
+  <xacro:property name="base_height" value="5"/>
+
+  <xacro:property name="wheel_radius" value="7"/>
+  <xacro:property name="wheel_width" value="45"/>
+  <xacro:property name="wheel_yoff" value="00.025"/> <!--maybe meauserement needed after the tests-->
+  <xacro:property name="wheel_zoff" value="6.2"/>
+  <xacro:property name="wheel_xoff" value="10.5"/>
+
+<!-- Hebi-Car Kit -->
+<link name="base_link">
+    <visual>
+        <geometry>
+            <box size="${base_length} ${base_width} ${base_height}"/>
+        </geometry>
+        <material name="Grey">
+            <color rgba="0 0.7 0.7 0.7"/>
+        </material>
+    </visual>
+</link>    
+
+<!-- Robot Footprint -->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="base_footprint"/>
+    <origin xyz="0.0 0.0 ${-(wheel_radius+wheel_zoff)}" rpy="0 0 0"/>
+  </joint>
+    
+    <xacro:macro name="actuator" params="name">
+        <xacro:property name="actuator_mass" value="0.500"/>
+        <xacro:property name="effort_limit" value="38"/>
+        <xacro:property name="velocity_limit" value="1.571"/>
+        <xacro:property name="mesh_filename" value="file://$(find hebi_description)/meshes/X8.stl"/>
+        <xacro:property name="damping" value="0.5"/>
+        <xacro:property name="friction" value="0.5"/>
+        
+        <link name="${name}_actuator_link">
+             <visual>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <mesh filename="${mesh_filename}" scale="0.001 0.001 0.001"/>
+                </geometry>
+                <xacro:red_material/>
+             </visual>
+              <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <mesh filename="${mesh_filename}" scale="0.001 0.001 0.001"/>
+                </geometry>
+              </collision>
+            <inertial>
+                <mass value="${actuator_mass}"/>
+                <origin xyz="-0.0145 -0.0031 0.0242" rpy="0 0 0" />
+                <inertia ixx="0.000246" ixy="0.0000444" ixz="0.0000266"
+                    iyy="0.000380" iyz="0.00000422"
+                    izz="0.000463"/>
+            </inertial>
+        </link>
+
+
+        <joint name="${name}_actuator_joint" type="fixed">
+            <parent link = "base_link"/>
+            <child link = "${name}_actuator_link"/>
+            <origin xyz="0 0 0.045" rpy="0 ${pi} 0"/>
+            <axis xyz="0 0 -1"/>
+        </joint>
+    </xacro:macro>
+
+    <xacro:actuator name="front_right"/>
+    <xacro:actuator name="front_left"/>
+    <xacro:actuator name="back_right"/>
+    <xacro:actuator name="back_left"/>
+
+    
+<!--Actuator Links-->
+
+<!--Wheels-->
+<xacro:macro name="wheel" params="name x_reflect y_reflect">
+    <link name="${name}_wheel_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+            <geometry>
+                <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+            </geometry>
+            <material name="Grey">
+                <color rgba="0.5 0.5 0.5 1.0"/>
+            </material>
+        </visual>
+    </link>
+
+      <joint name="${name}_wheel_joint" type="continuous">
+         <parent link ="${name}_actuator_link"/>
+            <child link ="${name}_wheel_link"/>
+            <origin xyz="${x_reflect*wheel_xoff} ${y_reflect*(base_width/2+wheel_yoff)} ${-wheel_zoff}" rpy="0 0 0"/>
+            <axis xyz="0 1 0"/>
+      </joint>
+</xacro:macro>
+
+<xacro:wheel name = "back_left"  x_reflect="-1" y_reflect="1" />
+<xacro:wheel name = "back_right" x_reflect="-1" y_reflect="-1" />
+<xacro:wheel name = "front_left" x_reflect="1" y_reflect="1" />
+<xacro:wheel name = "front_right" x_reflect="1" y_reflect="-1" />
+</robot>
